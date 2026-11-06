@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Sostenibilidad - Microcréditos Gig</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+<body>
+    <canvas id="stars-canvas"></canvas>
+
+    <main class="login-container">
+        <section class="login-card">
+            <header class="login-header">
+                <div class="brand-glow"></div>
+                <h1 class="login-title">Sostenibilidad Crediticia</h1>
+                <p class="login-subtitle">Simulador de capacidad de pago ante contingencias</p>
+            </header>
+
+            <form id="sustainability-form" class="login-form">
+                <!-- Weekly incomes -->
+                <div class="form-group">
+                    <label for="income-w1" class="form-label">Ingreso Semana 1 (COP)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="income-w1" class="form-input" placeholder="Ej: 200000" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="income-w2" class="form-label">Ingreso Semana 2 (COP)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="income-w2" class="form-input" placeholder="Ej: 150000" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="income-w3" class="form-label">Ingreso Semana 3 (COP)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="income-w3" class="form-input" placeholder="Ej: 220000" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="income-w4" class="form-label">Ingreso Semana 4 (COP)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="income-w4" class="form-input" placeholder="Ej: 165000" min="0" required>
+                    </div>
+                </div>
+
+                <!-- Expenses & debts -->
+                <div class="form-group">
+                    <label for="fixed-expenses" class="form-label">Gastos fijos semanales (arriendo, servicios, mercado)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="fixed-expenses" class="form-input" placeholder="Ej: 90000" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="debt-payments" class="form-label">Deudas actuales (cuotas semanales ya comprometidas)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="debt-payments" class="form-input" placeholder="Ej: 20000" min="0" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-button">
+                    <span>Simular Sostenibilidad</span>
+                </button>
+            </form>
+
+            <!-- Results display inside the cosmic card -->
+            <div id="results-container" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1.5rem;">
+                <div id="traffic-badge" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-align: center; margin-bottom: 1rem;">
+                    <span id="traffic-text"></span>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                    <small style="color: #94a3b8; display: block;">Rango de cuota semanal recomendada:</small>
+                    <strong id="recommended-range" style="font-size: 1.25rem; color: #38bdf8;"></strong>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                    <div style="background: rgba(0, 0, 0, 0.2); padding: 0.75rem; border-radius: 6px;">
+                        <span style="color: #cbd5e1; font-weight: 600;">Semanas Reportadas:</span>
+                        <div style="color: #94a3b8;">Percentil 25: <span id="base-p25" style="color: #fff;"></span></div>
+                        <div style="color: #94a3b8;">Capacidad disponible: <span id="base-capacity" style="color: #fff;"></span></div>
+                        <div style="margin-top: 0.3rem;">
+                            <span style="color: #4ade80;">Rec (30%): <b id="base-tier-30"></b></span> | 
+                            <span style="color: #facc15;">Máx (50%): <b id="base-tier-50"></b></span> | 
+                            <span style="color: #f87171;">Riesgo (60%): <b id="base-tier-60"></b></span>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0, 0, 0, 0.2); padding: 0.75rem; border-radius: 6px; border-left: 3px solid #f97316;">
+                        <span style="color: #cbd5e1; font-weight: 600;">Semana Contingencia ($0):</span>
+                        <div style="color: #94a3b8;">Percentil 25: <span id="stressed-p25" style="color: #fff;"></span></div>
+                        <div style="color: #94a3b8;">Capacidad disponible: <span id="stressed-capacity" style="color: #fff;"></span></div>
+                        <div style="margin-top: 0.3rem;">
+                            <span style="color: #4ade80;">Rec (30%): <b id="stressed-tier-30"></b></span> | 
+                            <span style="color: #facc15;">Máx (50%): <b id="stressed-tier-50"></b></span> | 
+                            <span style="color: #f87171;">Riesgo (60%): <b id="stressed-tier-60"></b></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="static/js/stars.js"></script>
+    <script>
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('wheel', function (e) {
+            e.preventDefault();
+            this.blur(); // Remueve el foco para evitar que el navegador altere el valor
+        }, { passive: false });
+    });
+
+    function calculatePercentile25(values) {
+        if (!values || values.length === 0) return 0;
+        const sorted = [...values].sort((a, b) => a - b);
+        const index = 0.25 * (sorted.length - 1);
+        const lower = Math.floor(index);
+        const upper = Math.ceil(index);
+        const weight = index - lower;
+        return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    document.getElementById('sustainability-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const incomeW1 = parseFloat(document.getElementById('income-w1').value) || 0;
+        const incomeW2 = parseFloat(document.getElementById('income-w2').value) || 0;
+        const incomeW3 = parseFloat(document.getElementById('income-w3').value) || 0;
+        const incomeW4 = parseFloat(document.getElementById('income-w4').value) || 0;
+        const fixedExpenses = parseFloat(document.getElementById('fixed-expenses').value) || 0;
+        const debtPayments = parseFloat(document.getElementById('debt-payments').value) || 0;
+
+        const reportedIncomes = [incomeW1, incomeW2, incomeW3, incomeW4];
+        const totalWeeklyExpenses = fixedExpenses + debtPayments;
+
+        // 1. Baseline scenario calculations
+        const baseP25 = calculatePercentile25(reportedIncomes);
+        const baseAvailableCapacity = Math.max(0, baseP25 - totalWeeklyExpenses);
+        const baseTier30 = Math.round(baseAvailableCapacity * 0.30);
+        const baseTier50 = Math.round(baseAvailableCapacity * 0.50);
+        const baseTier60 = Math.round(baseAvailableCapacity * 0.60);
+
+        // 2. Stressed scenario calculations (injection of zero-income week)
+        const stressedIncomes = [...reportedIncomes, 0];
+        const stressedP25 = calculatePercentile25(stressedIncomes);
+        const stressedAvailableCapacity = Math.max(0, stressedP25 - totalWeeklyExpenses);
+        const stressedTier30 = Math.round(stressedAvailableCapacity * 0.30);
+        const stressedTier50 = Math.round(stressedAvailableCapacity * 0.50);
+        const stressedTier60 = Math.round(stressedAvailableCapacity * 0.60);
+
+        // 3. Render results to DOM
+        document.getElementById('base-p25').textContent = formatCurrency(baseP25);
+        document.getElementById('base-capacity').textContent = formatCurrency(baseAvailableCapacity);
+        document.getElementById('base-tier-30').textContent = formatCurrency(baseTier30);
+        document.getElementById('base-tier-50').textContent = formatCurrency(baseTier50);
+        document.getElementById('base-tier-60').textContent = formatCurrency(baseTier60);
+
+        document.getElementById('stressed-p25').textContent = formatCurrency(stressedP25);
+        document.getElementById('stressed-capacity').textContent = formatCurrency(stressedAvailableCapacity);
+        document.getElementById('stressed-tier-30').textContent = formatCurrency(stressedTier30);
+        document.getElementById('stressed-tier-50').textContent = formatCurrency(stressedTier50);
+        document.getElementById('stressed-tier-60').textContent = formatCurrency(stressedTier60);
+
+        document.getElementById('recommended-range').textContent = 
+            `${formatCurrency(stressedTier30)} — ${formatCurrency(baseTier30)}`;
+
+        // 4. Traffic light evaluation
+        const badge = document.getElementById('traffic-badge');
+        const badgeText = document.getElementById('traffic-text');
+
+        if (baseAvailableCapacity === 0 || stressedAvailableCapacity === 0) {
+            if (baseAvailableCapacity === 0) {
+                badge.style.background = 'rgba(239, 68, 68, 0.2)';
+                badge.style.color = '#f87171';
+                badge.style.border = '1px solid #ef4444';
+                badgeText.textContent = 'Alto Riesgo: Capacidad de pago insuficiente';
+            } else {
+                badge.style.background = 'rgba(234, 179, 8, 0.2)';
+                badge.style.color = '#facc15';
+                badge.style.border = '1px solid #eab308';
+                badgeText.textContent = 'Riesgo Moderado: Vulnerable ante una semana mala';
+            }
+        } else {
+            badge.style.background = 'rgba(34, 197, 94, 0.2)';
+            badge.style.color = '#4ade80';
+            badge.style.border = '1px solid #22c55e';
+            badgeText.textContent = 'Crédito Sostenible y Viable';
+        }
+
+        document.getElementById('results-container').style.display = 'block';
+    });
+    </script>
+</body>
+</html>
